@@ -1,0 +1,170 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+/* ============================================
+   THEME — Refined Medical Minimalism
+   Light mode only.
+   Palette extracted from .aidesigner/foundation/design-system.html
+   ============================================ */
+
+@theme inline {
+  /* Tailwind / shadcn semantic tokens (mapped to our raw palette) */
+  --color-background: var(--paper);
+  --color-foreground: var(--ink);
+  --color-card: var(--card);
+  --color-card-foreground: var(--ink);
+  --color-popover: var(--card);
+  --color-popover-foreground: var(--ink);
+  --color-primary: var(--moss);
+  --color-primary-foreground: oklch(0.97 0.01 155);
+  --color-secondary: var(--paper-2);
+  --color-secondary-foreground: var(--ink);
+  --color-muted: var(--paper-2);
+  --color-muted-foreground: var(--ink-3);
+  --color-accent: var(--moss-soft);
+  --color-accent-foreground: var(--moss-ink);
+  --color-destructive: var(--terracotta);
+  --color-destructive-foreground: oklch(0.97 0.01 30);
+  --color-border: var(--line);
+  --color-input: var(--line);
+  --color-ring: var(--moss);
+
+  /* Sidebar — same as main surface in this aesthetic */
+  --color-sidebar: var(--paper);
+  --color-sidebar-foreground: var(--ink);
+  --color-sidebar-primary: var(--moss);
+  --color-sidebar-primary-foreground: oklch(0.97 0.01 155);
+  --color-sidebar-accent: var(--paper-2);
+  --color-sidebar-accent-foreground: var(--ink);
+  --color-sidebar-border: var(--line);
+  --color-sidebar-ring: var(--moss);
+
+  /* Chart slots (kept neutral, can be tuned later) */
+  --color-chart-1: var(--moss);
+  --color-chart-2: var(--sage);
+  --color-chart-3: var(--amber);
+  --color-chart-4: var(--coral);
+  --color-chart-5: var(--terracotta);
+
+  /* Fonts */
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
+  --font-display: var(--font-display);
+
+  /* Radius — refined (not ultra-rounded) */
+  --radius: 0.4375rem;          /* 7px — default for most components */
+  --radius-sm: 0.3125rem;        /* 5px */
+  --radius-md: 0.4375rem;        /* 7px */
+  --radius-lg: 0.625rem;         /* 10px — cards */
+  --radius-xl: 0.875rem;         /* 14px — dialog */
+}
+
+:root {
+  /* ===== Raw palette (warm clinical) ===== */
+
+  /* Surface (warm paper) */
+  --paper:        oklch(0.985 0.005 80);
+  --paper-2:      oklch(0.97  0.006 80);
+  --paper-3:      oklch(0.945 0.008 80);
+  --card:         oklch(1 0 0);
+
+  /* Ink (warm charcoal) */
+  --ink:          oklch(0.18 0.015 80);
+  --ink-2:        oklch(0.32 0.012 80);
+  --ink-3:        oklch(0.52 0.01  80);
+  --ink-4:        oklch(0.72 0.008 80);
+
+  /* Lines */
+  --line:         oklch(0.92 0.008 80);
+  --line-2:       oklch(0.86 0.01  80);
+
+  /* Primary — Mossgreen */
+  --moss:         oklch(0.32 0.06 155);
+  --moss-hover:   oklch(0.27 0.065 155);
+  --moss-soft:    oklch(0.94 0.025 155);
+  --moss-line:    oklch(0.85 0.04 155);
+  --moss-ink:     oklch(0.42 0.07 155);
+
+  /* Accent — Coral (rare use only) */
+  --coral:        oklch(0.78 0.09 35);
+  --coral-soft:   oklch(0.96 0.02 35);
+  --coral-ink:    oklch(0.55 0.13 30);
+
+  /* Status — muted clinical */
+  --sage:         oklch(0.72 0.07 150);
+  --sage-soft:    oklch(0.95 0.025 150);
+  --sage-ink:     oklch(0.42 0.08 150);
+  --amber:        oklch(0.82 0.10 75);
+  --amber-soft:   oklch(0.97 0.025 75);
+  --amber-ink:    oklch(0.50 0.10 60);
+  --terracotta:   oklch(0.62 0.12 30);
+  --terracotta-soft: oklch(0.96 0.02 30);
+  --terracotta-ink: oklch(0.45 0.13 30);
+
+  /* Easing */
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  html {
+    font-family: var(--font-sans), system-ui, -apple-system, sans-serif;
+    font-feature-settings: 'ss01' on, 'cv01' on;
+  }
+  body {
+    background: var(--paper);
+    color: var(--ink-2);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  /* Subtle paper texture (very low-opacity noise overlay) */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.025;
+    z-index: 100;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+  ::selection {
+    background: var(--moss-soft);
+    color: var(--moss-ink);
+  }
+}
+
+@layer utilities {
+  /* Display type — Fraunces with editorial settings */
+  .font-display {
+    font-family: var(--font-display), Georgia, serif;
+    font-variation-settings: 'opsz' 60, 'SOFT' 30;
+  }
+  .font-display-large {
+    font-family: var(--font-display), Georgia, serif;
+    font-variation-settings: 'opsz' 144, 'SOFT' 50;
+  }
+  .font-display-italic {
+    font-family: var(--font-display), Georgia, serif;
+    font-style: italic;
+    font-variation-settings: 'opsz' 144, 'SOFT' 80;
+  }
+
+  /* Mono with tabular numbers */
+  .font-mono-tnum {
+    font-family: var(--font-mono), ui-monospace, monospace;
+    font-feature-settings: 'tnum' on;
+  }
+
+  /* Eyebrow / label utility */
+  .label-eyebrow {
+    font-family: var(--font-mono), ui-monospace, monospace;
+    font-size: 0.6875rem;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+  }
+}

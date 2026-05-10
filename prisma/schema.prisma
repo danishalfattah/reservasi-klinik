@@ -1,0 +1,86 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String
+  phone     String?
+  role      Role
+  createdAt DateTime @default(now())
+
+  doctorProfile Doctor?
+  reservations  Reservation[] @relation("PasienReservations")
+}
+
+model Doctor {
+  id           String        @id @default(cuid())
+  userId       String        @unique
+  user         User          @relation(fields: [userId], references: [id])
+  spesialis    String
+  tarif        Int
+  durasiMenit  Int
+  schedules    Schedule[]
+  reservations Reservation[]
+}
+
+model Schedule {
+  id         String @id @default(cuid())
+  doctorId   String
+  doctor     Doctor @relation(fields: [doctorId], references: [id])
+  hari       Int
+  jamMulai   String
+  jamSelesai String
+}
+
+model Reservation {
+  id           String            @id @default(cuid())
+  pasienId     String
+  pasien       User              @relation("PasienReservations", fields: [pasienId], references: [id])
+  doctorId     String
+  doctor       Doctor            @relation(fields: [doctorId], references: [id])
+  tanggal      DateTime
+  jam          String
+  nomorAntrian Int
+  status       ReservationStatus
+  payment      Payment?
+  createdAt    DateTime          @default(now())
+}
+
+model Payment {
+  id              String        @id @default(cuid())
+  reservationId   String        @unique
+  reservation     Reservation   @relation(fields: [reservationId], references: [id])
+  amount          Int
+  midtransOrderId String        @unique
+  snapToken       String
+  status          PaymentStatus
+  paidAt          DateTime?
+}
+
+enum Role {
+  PASIEN
+  ADMIN
+  DOKTER
+}
+
+enum ReservationStatus {
+  PENDING
+  CONFIRMED
+  DONE
+  CANCELLED
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  EXPIRED
+}
