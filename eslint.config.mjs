@@ -44,6 +44,16 @@ const eslintConfig = defineConfig([
       eqeqeq: ["error", "always"],
     },
   },
+  // Override khusus untuk file test — aturan yang terlalu ketat untuk test callback
+  {
+    files: ["tests/**/*.ts"],
+    rules: {
+      "max-lines-per-function": "off",
+      "@typescript-eslint/explicit-function-return-type": "off",
+      complexity: "off",
+      "max-depth": "off",
+    },
+  },
 ]);
 
 export default eslintConfig;

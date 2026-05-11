@@ -132,7 +132,7 @@ export class ReservationService {
   /**
    * Private helper: Validasi booking window & hari.
    */
-  private validasiWindowDanHari(
+  public validasiWindowDanHari(
     tanggal: Date,
     selisihHari: number
   ): { valid: boolean; errorCode?: string; errorMessage?: string } {
