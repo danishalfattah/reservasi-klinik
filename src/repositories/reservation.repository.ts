@@ -23,13 +23,11 @@ interface CreateReservationData {
   doctorId: string;
   tanggal: Date;
   jam: string;
-  nomorAntrian: number;
   status: ReservationStatus;
 }
 
 interface UpdateReservationData {
   status?: ReservationStatus;
-  nomorAntrian?: number;
 }
 
 /**
@@ -100,36 +98,6 @@ export class ReservationRepository {
   }
 
   /**
-   * Cari semua reservasi aktif (PENDING/CONFIRMED) untuk dokter pada tanggal tertentu (semua jam).
-   * Dipakai untuk menghitung nomor antrian — perlu semua reservasi di hari itu, nanti di-sort oleh jam.
-   */
-  async findActiveByDoctorTanggal(
-    doctorId: string,
-    tanggal: Date
-  ): Promise<Prisma.ReservationGetPayload<object>[]> {
-    const startOfDay = new Date(
-      tanggal.getFullYear(),
-      tanggal.getMonth(),
-      tanggal.getDate()
-    );
-    const endOfDay = new Date(startOfDay);
-    endOfDay.setDate(endOfDay.getDate() + 1);
-
-    return prisma.reservation.findMany({
-      where: {
-        doctorId,
-        tanggal: {
-          gte: startOfDay,
-          lt: endOfDay,
-        },
-        status: {
-          in: ['PENDING', 'CONFIRMED'],
-        },
-      },
-    });
-  }
-
-  /**
    * Buat reservasi baru dengan status PENDING (belum dibayar).
    */
   async create(data: CreateReservationData): Promise<Prisma.ReservationGetPayload<object>> {
@@ -139,7 +107,6 @@ export class ReservationRepository {
         doctorId: data.doctorId,
         tanggal: data.tanggal,
         jam: data.jam,
-        nomorAntrian: data.nomorAntrian,
         status: data.status,
       },
     });

@@ -27,7 +27,6 @@ export interface Reservation {
   doctorId: string;
   tanggal: Date;
   jam: string; // "HH:MM"
-  nomorAntrian: number;
   status: ReservationStatus;
   createdAt: Date;
 }
@@ -63,19 +62,3 @@ export interface ValidasiReservasiResult {
   errorMessage?: string;
 }
 
-/**
- * Input untuk menghitung estimasi antrian.
- */
-export interface HitungAntrianInput {
-  doctorId: string;
-  tanggal: Date;
-  jam: string; // "HH:MM"
-}
-
-/**
- * Result dari hitungEstimasiAntrian().
- */
-export interface HitungAntrianResult {
-  nomorAntrian: number;
-  estimasiMenit: number;
-}

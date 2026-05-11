@@ -10,7 +10,6 @@ interface Reservation {
   id: string;
   tanggal: string;
   jam: string;
-  nomorAntrian: number;
   status: string;
   pasien: Pasien;
 }
@@ -56,8 +55,8 @@ function StatusBadge({ status }: { status: string }): React.JSX.Element {
 
 function TableHeader(): React.JSX.Element {
   return (
-    <div className="grid grid-cols-[auto_1fr_auto_auto] gap-4 px-5 py-3 border-b border-border bg-(--paper-2)">
-      {['Antrian', 'Pasien', 'Jam', 'Status'].map((h) => (
+    <div className="grid grid-cols-[1fr_auto_auto] gap-4 px-5 py-3 border-b border-border bg-(--paper-2)">
+      {['Pasien', 'Jam', 'Status'].map((h) => (
         <span key={h} className="label-eyebrow text-[10px]">{h}</span>
       ))}
     </div>
@@ -66,8 +65,7 @@ function TableHeader(): React.JSX.Element {
 
 function ReservationRow({ r }: { r: Reservation }): React.JSX.Element {
   return (
-    <div className="grid grid-cols-[auto_1fr_auto_auto] items-center gap-4 px-5 py-3.5 border-b border-border last:border-0 hover:bg-(--paper-2) transition-colors">
-      <span className="text-[13px] font-mono-tnum font-medium text-foreground w-6 text-center">{r.nomorAntrian}</span>
+    <div className="grid grid-cols-[1fr_auto_auto] items-center gap-4 px-5 py-3.5 border-b border-border last:border-0 hover:bg-(--paper-2) transition-colors">
       <div>
         <p className="text-[13px] font-medium text-foreground">{r.pasien.name}</p>
         <p className="text-[11px] text-muted-foreground">{r.pasien.email}</p>

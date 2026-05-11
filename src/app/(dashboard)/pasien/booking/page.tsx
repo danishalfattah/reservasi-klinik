@@ -24,13 +24,11 @@ interface Schedule {
 
 interface CheckResult {
   tersedia: boolean;
-  estimasi: { nomorAntrian: number; estimasiMenit: number } | null;
 }
 
 interface SlotStatus {
   jam: string;
   tersedia: boolean;
-  estimasi: CheckResult['estimasi'];
 }
 
 interface BookingState {
@@ -98,14 +96,14 @@ async function checkSlot(doctorId: string, tanggal: string, jam: string): Promis
     body: JSON.stringify({ doctorId, tanggal, jam }),
   });
   const data = (await res.json()) as { success: boolean; data?: CheckResult };
-  return data.success && data.data ? data.data : { tersedia: false, estimasi: null };
+  return data.success && data.data ? data.data : { tersedia: false };
 }
 
 async function checkAllSlots(doctorId: string, tanggal: string, jams: string[]): Promise<SlotStatus[]> {
   return Promise.all(
     jams.map(async (jam) => {
       const result = await checkSlot(doctorId, tanggal, jam);
-      return { jam, tersedia: result.tersedia, estimasi: result.estimasi };
+      return { jam, tersedia: result.tersedia };
     })
   );
 }

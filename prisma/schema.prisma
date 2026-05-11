@@ -41,17 +41,16 @@ model Schedule {
 }
 
 model Reservation {
-  id           String            @id @default(cuid())
-  pasienId     String
-  pasien       User              @relation("PasienReservations", fields: [pasienId], references: [id])
-  doctorId     String
-  doctor       Doctor            @relation(fields: [doctorId], references: [id])
-  tanggal      DateTime
-  jam          String
-  nomorAntrian Int
-  status       ReservationStatus
-  payment      Payment?
-  createdAt    DateTime          @default(now())
+  id        String            @id @default(cuid())
+  pasienId  String
+  pasien    User              @relation("PasienReservations", fields: [pasienId], references: [id])
+  doctorId  String
+  doctor    Doctor            @relation(fields: [doctorId], references: [id])
+  tanggal   DateTime
+  jam       String
+  status    ReservationStatus
+  payment   Payment?
+  createdAt DateTime          @default(now())
 }
 
 model Payment {

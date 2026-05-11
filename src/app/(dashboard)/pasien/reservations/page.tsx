@@ -10,7 +10,6 @@ interface ReservationListItem {
   id: string;
   tanggal: string;
   jam: string;
-  nomorAntrian: number;
   status: string;
   doctor?: { spesialis: string; user?: { name: string } };
   payment?: { status: string } | null;
@@ -54,7 +53,7 @@ function ReservationRow({ item }: { item: ReservationListItem }): React.JSX.Elem
           <p className="text-[14px] font-medium text-foreground">{item.doctor?.spesialis ?? 'Konsultasi'}</p>
           <span className={`px-2 py-0.5 rounded-sm text-[11px] font-medium ${badgeStyle}`}>{STATUS_LABEL[item.status] ?? item.status}</span>
         </div>
-        <p className="text-[12px] text-muted-foreground">{formatDate(item.tanggal)} · {item.jam} · Antrian {item.nomorAntrian}</p>
+        <p className="text-[12px] text-muted-foreground">{formatDate(item.tanggal)} · {item.jam}</p>
         <p className="text-[12px] text-muted-foreground">dr. {getDoctorName(item)}</p>
       </div>
       <div className="flex items-center gap-2 shrink-0">

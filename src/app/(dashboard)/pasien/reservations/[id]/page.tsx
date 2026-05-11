@@ -13,7 +13,6 @@ interface ReservationDetail {
   doctorId: string;
   tanggal: string;
   jam: string;
-  nomorAntrian: number;
   status: string;
   doctor?: { spesialis: string; tarif: number; user?: { name: string } };
   payment?: { status: string; snapToken: string; midtransOrderId: string } | null;
@@ -71,7 +70,6 @@ function baseRows(r: ReservationDetail): DetailRow[] {
   return [
     { label: 'Tanggal', value: formatDate(r.tanggal) },
     { label: 'Jam', value: r.jam, mono: true },
-    { label: 'Nomor Antrian', value: r.nomorAntrian, mono: true },
     { label: 'Status Pembayaran', value: getPaymentStatus(r) },
     { label: 'Dokter', value: `dr. ${getDoctorName(r)}` },
     { label: 'Spesialisasi', value: getSpesialis(r) },

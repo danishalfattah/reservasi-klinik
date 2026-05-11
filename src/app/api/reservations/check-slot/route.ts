@@ -25,7 +25,7 @@ const checkSlotSchema = z.object({
 
 /**
  * POST /api/reservations/check-slot
- * Cek ketersediaan slot dan hitung estimasi antrian (tanpa membuat reservasi).
+ * Cek ketersediaan slot (tanpa membuat reservasi).
  */
 export async function POST(request: NextRequest): Promise<Response> {
   try {
@@ -50,11 +50,7 @@ export async function POST(request: NextRequest): Promise<Response> {
     }
 
     const tersedia = await service.cekKetersediaanSlot(doctorId, tanggal, jam);
-
-    const estimasi = tersedia
-      ? await service.hitungEstimasiAntrian({ doctorId, tanggal, jam })
-      : null;
-    return apiSuccess({ tersedia, estimasi }, 200);
+    return apiSuccess({ tersedia }, 200);
   } catch (error) {
     return handleRouteError(error, 'Gagal mengecek ketersediaan slot', 'POST /api/reservations/check-slot error:');
   }

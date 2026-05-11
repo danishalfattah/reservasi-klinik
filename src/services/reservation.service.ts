@@ -13,8 +13,6 @@ import type {
   CreateReservationInput,
   ValidasiReservasiInput,
   ValidasiReservasiResult,
-  HitungAntrianInput,
-  HitungAntrianResult,
 } from '@/types/reservation.types';
 import type { Prisma } from '@/generated/prisma/client';
 
@@ -196,36 +194,6 @@ export class ReservationService {
   }
 
   /**
-   * hitungEstimasiAntrian() — Menghitung nomor antrian & estimasi waktu tunggu.
-   * Sorts reservasi aktif by jam, calculates queue position.
-   * @returns nomorAntrian & estimasiMenit
-   */
-  async hitungEstimasiAntrian(input: HitungAntrianInput): Promise<HitungAntrianResult> {
-    const doctor = await this.doctorRepo.findById(input.doctorId);
-    if (!doctor) {
-      throw new NotFoundError('Dokter tidak ditemukan');
-    }
-
-    const reservasiAktif = await this.reservationRepo.findActiveByDoctorTanggal(
-      input.doctorId,
-      input.tanggal
-    );
-
-    if (reservasiAktif.length === 0) {
-      return { nomorAntrian: 1, estimasiMenit: 0 };
-    }
-
-    const reservasiSorted = reservasiAktif.sort((a, b) => a.jam.localeCompare(b.jam));
-    const jumlahLebihAwal = reservasiSorted.filter((r) => r.jam < input.jam).length;
-    const nomorAntrian = jumlahLebihAwal + 1;
-
-    return {
-      nomorAntrian,
-      estimasiMenit: (nomorAntrian - 1) * doctor.durasiMenit,
-    };
-  }
-
-  /**
    * buatReservasi() — Orchestrate: validate → check availability → calculate queue → create.
    * @throws ValidationError if validation fails
    * @throws ConflictError if availability check fails
@@ -251,18 +219,11 @@ export class ReservationService {
       throw new ConflictError('SLOT_NOT_AVAILABLE', 'Slot waktu tidak tersedia');
     }
 
-    const { nomorAntrian } = await this.hitungEstimasiAntrian({
-      doctorId: input.doctorId,
-      tanggal: input.tanggal,
-      jam: input.jam,
-    });
-
     const reservation = await this.reservationRepo.create({
       pasienId: input.pasienId,
       doctorId: input.doctorId,
       tanggal: input.tanggal,
       jam: input.jam,
-      nomorAntrian,
       status: 'PENDING',
     });
 

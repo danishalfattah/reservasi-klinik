@@ -98,7 +98,7 @@ async function seedReservations(patientIds: string[], schedules: SeedSchedule[])
     const reservation = await prisma.reservation.create({
       data: {
         pasienId: patientIds[i], doctorId: sched.doctorId,
-        tanggal: resDate, jam: sched.jamMulai, status, nomorAntrian: i + 1,
+        tanggal: resDate, jam: sched.jamMulai, status,
       },
     });
 

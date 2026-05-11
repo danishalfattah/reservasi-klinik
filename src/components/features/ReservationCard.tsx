@@ -1,13 +1,12 @@
 'use client';
 
 import Link from 'next/link';
-import { CalendarDays, Clock, Hash, CreditCard } from 'lucide-react';
+import { CalendarDays, Clock, CreditCard } from 'lucide-react';
 
 export interface ReservationCardItem {
   id: string;
   tanggal: string;
   jam: string;
-  nomorAntrian: number;
   status: string;
   doctor?: {
     spesialis: string;
@@ -72,7 +71,6 @@ function CardMeta({ item }: { item: ReservationCardItem }): React.JSX.Element {
     <div className="grid grid-cols-2 gap-y-2">
       <MetaRow icon={CalendarDays} text={formatDate(item.tanggal)} />
       <MetaRow icon={Clock} text={item.jam} />
-      <MetaRow icon={Hash} text={`Antrian ${item.nomorAntrian}`} />
       <MetaRow icon={CreditCard} text={item.payment?.status ?? 'BELUM BAYAR'} />
     </div>
   );
