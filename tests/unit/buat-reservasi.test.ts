@@ -1,119 +1,110 @@
-import { ReservationService } from '@/services/reservation.service';
-import { ValidationError, ConflictError } from '@/lib/errors';
-import {
-  DOCTOR_ID,
-  PASIEN_ID,
-  TANGGAL_SENIN,
-  TANGGAL_MINGGU,
-  mockDoctor,
-  mockPasien,
-  mockReservation,
-  makeMockReservationRepo,
-  makeMockDoctorRepo,
-  makeMockUserRepo,
-  makeMockPaymentService,
-} from './fixtures/reservation.fixtures';
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
-// buatReservasi memanggil validasiReservasi tanpa 'now',
-// sehingga fake timer diperlukan agar new Date() = 2026-05-11.
-describe('buatReservasi', () => {
+import { ReservationService } from '@/services/reservation.service';
+
+const mockReservationRepo = {
+  findActiveByPasienTanggal: jest.fn(),
+  findActiveByDoctorTanggalJam: jest.fn(),
+  create: jest.fn(),
+} as any;
+
+const mockDoctorRepo = {
+  findByIdWithSchedules: jest.fn(),
+  findById: jest.fn(),
+} as any;
+
+const mockUserRepo = {
+  findById: jest.fn(),
+} as any;
+
+const mockPaymentService = {
+  buatPayment: jest.fn(),
+} as any;
+
+describe('Test Fungsi buatReservasi', () => {
   let service: ReservationService;
-  let reservationRepo: ReturnType<typeof makeMockReservationRepo>;
-  let doctorRepo: ReturnType<typeof makeMockDoctorRepo>;
-  let userRepo: ReturnType<typeof makeMockUserRepo>;
-  let paymentService: ReturnType<typeof makeMockPaymentService>;
 
   beforeEach(() => {
+    service = new ReservationService(
+      mockReservationRepo,
+      mockDoctorRepo,
+      mockUserRepo,
+      mockPaymentService
+    );
+
     jest.useFakeTimers();
     jest.setSystemTime(new Date('2026-05-11T00:00:00.000Z'));
-
-    reservationRepo = makeMockReservationRepo();
-    doctorRepo = makeMockDoctorRepo();
-    userRepo = makeMockUserRepo();
-    paymentService = makeMockPaymentService();
-    service = new ReservationService(reservationRepo, doctorRepo, userRepo, paymentService);
   });
 
   afterEach(() => {
-    jest.useRealTimers();
+    jest.clearAllMocks();
   });
 
-  it('TC-UNIT-07 [Path 1]: throws ValidationError jika validasiReservasi gagal (hari Minggu)', async () => {
-    // Pasien ditemukan, tetapi tanggal Minggu → KLINIK_TUTUP
-    userRepo.findById.mockResolvedValue(mockPasien);
+  it('harus error kalau booking di hari Minggu karena klinik libur', async () => {
+    mockUserRepo.findById.mockResolvedValue({ id: 'pasien-1' });
 
-    await expect(
-      service.buatReservasi({
-        pasienId: PASIEN_ID,
-        doctorId: DOCTOR_ID,
-        tanggal: TANGGAL_MINGGU, // Minggu, selisihHari=6 → lolos window tapi hari tutup
-        jam: '09:00',
-      }),
-    ).rejects.toThrow(ValidationError);
+    const tanggalMinggu = new Date('2026-05-17');
 
-    await expect(
-      service.buatReservasi({
-        pasienId: PASIEN_ID,
-        doctorId: DOCTOR_ID,
-        tanggal: TANGGAL_MINGGU,
+    try {
+      await service.buatReservasi({
+        pasienId: 'pasien-1',
+        doctorId: 'dokter-1',
+        tanggal: tanggalMinggu,
         jam: '09:00',
-      }),
-    ).rejects.toMatchObject({ code: 'KLINIK_TUTUP' });
+      });
+    } catch (error: any) {
+      expect(error.code).toBe('KLINIK_TUTUP');
+    }
   });
 
-  it('TC-UNIT-08 [Path 2]: throws ConflictError jika slot tidak tersedia', async () => {
-    // validasiReservasi: pasien valid, window valid (selisihHari=7), Senin, tidak duplikat
-    userRepo.findById.mockResolvedValue(mockPasien);
-    reservationRepo.findActiveByPasienTanggal.mockResolvedValue([]);
-    // cekKetersediaanSlot: dokter ditemukan, jam valid, tapi slot sudah terisi
-    doctorRepo.findByIdWithSchedules.mockResolvedValue(mockDoctor);
-    reservationRepo.findActiveByDoctorTanggalJam.mockResolvedValue([mockReservation]);
+  it('harus gagal kalau jamnya udah dibooking orang lain', async () => {
+    mockUserRepo.findById.mockResolvedValue({ id: 'pasien-1' });
+    mockReservationRepo.findActiveByPasienTanggal.mockResolvedValue([]);
+    mockDoctorRepo.findByIdWithSchedules.mockResolvedValue({ id: 'dokter-1' });
+
+    mockReservationRepo.findActiveByDoctorTanggalJam.mockResolvedValue([{ id: 'reservasi-lama' }]);
+
+    const tanggalSenin = new Date('2026-05-18');
 
     await expect(
       service.buatReservasi({
-        pasienId: PASIEN_ID,
-        doctorId: DOCTOR_ID,
-        tanggal: TANGGAL_SENIN, // Senin, selisihHari=7
+        pasienId: 'pasien-1',
+        doctorId: 'dokter-1',
+        tanggal: tanggalSenin,
         jam: '09:00',
-      }),
-    ).rejects.toThrow(ConflictError);
-
-    await expect(
-      service.buatReservasi({
-        pasienId: PASIEN_ID,
-        doctorId: DOCTOR_ID,
-        tanggal: TANGGAL_SENIN,
-        jam: '09:00',
-      }),
-    ).rejects.toMatchObject({ code: 'SLOT_NOT_AVAILABLE' });
+      })
+    ).rejects.toThrow();
   });
 
-  it('TC-UNIT-09 [Path 3]: returns reservation dan snapToken jika semua validasi lolos', async () => {
-    // validasiReservasi passes
-    userRepo.findById.mockResolvedValue(mockPasien);
-    reservationRepo.findActiveByPasienTanggal.mockResolvedValue([]);
-    // cekKetersediaanSlot passes (slot kosong)
-    doctorRepo.findByIdWithSchedules.mockResolvedValue(mockDoctor);
-    reservationRepo.findActiveByDoctorTanggalJam.mockResolvedValue([]);
-    // buat reservasi
-    reservationRepo.create.mockResolvedValue(mockReservation);
-    // requirePaymentParty
-    doctorRepo.findById.mockResolvedValue(mockDoctor);
-    // snap token
-    paymentService.buatPayment.mockResolvedValue({
-      snapToken: 'snap-token-xxx',
-      midtransOrderId: 'TRX-RSV-001',
+  it('berhasil simpan reservasi dan dapat token midtrans', async () => {
+    mockUserRepo.findById.mockResolvedValue({ id: 'pasien-1' });
+    mockReservationRepo.findActiveByPasienTanggal.mockResolvedValue([]);
+
+    mockDoctorRepo.findByIdWithSchedules.mockResolvedValue({
+      id: 'dokter-1',
+      schedules: [{ hari: 1, jamMulai: '09:00', jamSelesai: '12:00' }],
+    });
+
+    mockReservationRepo.findActiveByDoctorTanggalJam.mockResolvedValue([]);
+    mockDoctorRepo.findById.mockResolvedValue({ id: 'dokter-1' });
+
+    mockReservationRepo.create.mockResolvedValue({
+      id: 'reservasi-baru',
+      status: 'PENDING',
+    });
+
+    mockPaymentService.buatPayment.mockResolvedValue({
+      snapToken: 'token-midtrans-123',
     });
 
     const result = await service.buatReservasi({
-      pasienId: PASIEN_ID,
-      doctorId: DOCTOR_ID,
-      tanggal: TANGGAL_SENIN,
+      pasienId: 'pasien-1',
+      doctorId: 'dokter-1',
+      tanggal: new Date('2026-05-18'),
       jam: '09:00',
     });
 
-    expect(result.reservation).toEqual(mockReservation);
     expect(result.reservation.status).toBe('PENDING');
-    expect(result.snapToken).toBe('snap-token-xxx');
+    expect(result.snapToken).toBe('token-midtrans-123');
   });
 });

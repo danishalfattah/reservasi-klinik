@@ -1,81 +1,72 @@
-import { ReservationService } from '@/services/reservation.service';
-import {
-  PASIEN_ID,
-  TANGGAL_SENIN,
-  NOW,
-  mockPasien,
-  mockReservation,
-  makeMockReservationRepo,
-  makeMockDoctorRepo,
-  makeMockUserRepo,
-  makeMockPaymentService,
-} from './fixtures/reservation.fixtures';
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
-// Semua test menggunakan field 'now' agar deterministik,
-// tidak bergantung pada tanggal eksekusi test.
-describe('validasiReservasi', () => {
+import { ReservationService } from '@/services/reservation.service';
+
+const mockReservationRepo = {
+  findActiveByPasienTanggal: jest.fn(),
+} as any;
+
+const mockUserRepo = {
+  findById: jest.fn(),
+} as any;
+
+describe('Test Fungsi validasiReservasi', () => {
   let service: ReservationService;
-  let reservationRepo: ReturnType<typeof makeMockReservationRepo>;
-  let userRepo: ReturnType<typeof makeMockUserRepo>;
 
   beforeEach(() => {
-    reservationRepo = makeMockReservationRepo();
-    userRepo = makeMockUserRepo();
-    service = new ReservationService(
-      reservationRepo,
-      makeMockDoctorRepo(),
-      userRepo,
-      makeMockPaymentService(),
-    );
+    service = new ReservationService(mockReservationRepo, {} as any, mockUserRepo, {} as any);
   });
 
-  it('TC-UNIT-14 [Path 1]: returns PASIEN_NOT_FOUND jika ID pasien tidak ditemukan', async () => {
-    userRepo.findById.mockResolvedValue(null);
+  it('return PASIEN_NOT_FOUND kalau usernya ngasal / ga ada di DB', async () => {
+    mockUserRepo.findById.mockResolvedValue(null);
 
     const result = await service.validasiReservasi({
-      pasienId: 'USR-INVALID',
-      tanggal: TANGGAL_SENIN,
+      pasienId: 'user-ngasal',
+      tanggal: new Date('2026-05-18'),
     });
 
     expect(result.valid).toBe(false);
     expect(result.errorCode).toBe('PASIEN_NOT_FOUND');
   });
 
-  it('TC-UNIT-15 [Path 2]: returns BOOKING_TOO_SOON jika tanggal sama dengan now (selisih=0)', async () => {
-    userRepo.findById.mockResolvedValue(mockPasien);
+  it('gagal kalau pesennya buat hari ini juga (dadakan)', async () => {
+    mockUserRepo.findById.mockResolvedValue({ id: 'pasien-1' });
 
     const result = await service.validasiReservasi({
-      pasienId: PASIEN_ID,
-      tanggal: new Date('2026-05-11'), // sama dengan NOW → selisihHari = 0 < 1
-      now: NOW,
+      pasienId: 'pasien-1',
+      tanggal: new Date('2026-05-11'),
+      now: new Date('2026-05-11'),
     });
 
     expect(result.valid).toBe(false);
     expect(result.errorCode).toBe('BOOKING_TOO_SOON');
   });
 
-  it('TC-UNIT-16 [Path 3]: returns RESERVASI_DUPLIKAT jika sudah ada booking aktif di tanggal itu', async () => {
-    userRepo.findById.mockResolvedValue(mockPasien);
-    reservationRepo.findActiveByPasienTanggal.mockResolvedValue([mockReservation]);
+  it('gagal kalau pasien sudah punya bookingan aktif di tanggal yang sama (duplikat)', async () => {
+    mockUserRepo.findById.mockResolvedValue({ id: 'pasien-1' });
+
+    mockReservationRepo.findActiveByPasienTanggal.mockResolvedValue([
+      { id: 'reservasi-lama-pasien' },
+    ]);
 
     const result = await service.validasiReservasi({
-      pasienId: PASIEN_ID,
-      tanggal: TANGGAL_SENIN, // Senin, selisihHari=7 → valid
-      now: NOW,
+      pasienId: 'pasien-1',
+      tanggal: new Date('2026-05-18'),
+      now: new Date('2026-05-11'),
     });
 
     expect(result.valid).toBe(false);
     expect(result.errorCode).toBe('RESERVASI_DUPLIKAT');
   });
 
-  it('TC-UNIT-17 [Path 4]: returns valid:true jika semua validasi lolos', async () => {
-    userRepo.findById.mockResolvedValue(mockPasien);
-    reservationRepo.findActiveByPasienTanggal.mockResolvedValue([]);
+  it('sukses tervalidasi kalau semua syarat terpenuhi', async () => {
+    mockUserRepo.findById.mockResolvedValue({ id: 'pasien-1' });
+    mockReservationRepo.findActiveByPasienTanggal.mockResolvedValue([]);
 
     const result = await service.validasiReservasi({
-      pasienId: PASIEN_ID,
-      tanggal: TANGGAL_SENIN, // Senin, selisihHari=7 → valid, tidak duplikat
-      now: NOW,
+      pasienId: 'pasien-1',
+      tanggal: new Date('2026-05-18'),
+      now: new Date('2026-05-11'),
     });
 
     expect(result.valid).toBe(true);
