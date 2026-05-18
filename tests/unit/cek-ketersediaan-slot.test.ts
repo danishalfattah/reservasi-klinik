@@ -3,7 +3,6 @@
 import { ReservationService } from '@/services/reservation.service';
 import { NotFoundError } from '@/lib/errors';
 
-// Mocking repo seadanya aja
 const mockReservationRepo = {
   findActiveByDoctorTanggalJam: jest.fn(),
 } as any;
